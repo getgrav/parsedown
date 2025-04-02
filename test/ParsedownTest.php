@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 class ParsedownTest extends TestCase
 {
-    final function __construct($name = null, array $data = array(), $dataName = '')
+    final function __construct($name = null, array $data = [], $dataName = '')
     {
         $this->dirs = $this->initDirs();
         $this->Parsedown = $this->initParsedown();
@@ -21,7 +21,7 @@ class ParsedownTest extends TestCase
      */
     protected function initDirs()
     {
-        $dirs []= dirname(__FILE__).'/data/';
+        $dirs []= __DIR__.'/data/';
 
         return $dirs;
     }
@@ -50,7 +50,7 @@ class ParsedownTest extends TestCase
         $expectedMarkup = str_replace("\r\n", "\n", $expectedMarkup);
         $expectedMarkup = str_replace("\r", "\n", $expectedMarkup);
 
-        $this->Parsedown->setSafeMode(substr($test, 0, 3) === 'xss');
+        $this->Parsedown->setSafeMode(str_starts_with((string) $test, 'xss'));
 
         $actualMarkup = $this->Parsedown->text($markdown);
 
@@ -93,7 +93,7 @@ class ParsedownTest extends TestCase
 
     function data()
     {
-        $data = array();
+        $data = [];
 
         foreach ($this->dirs as $dir)
         {
@@ -121,7 +121,7 @@ class ParsedownTest extends TestCase
 
                 if (file_exists($dir . $basename . '.html'))
                 {
-                    $data []= array($basename, $dir);
+                    $data []= [$basename, $dir];
                 }
             }
         }
