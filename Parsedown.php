@@ -17,7 +17,7 @@ class Parsedown
 {
     # ~
 
-    const version = '1.7.4';
+    const version = '2.0.0-grav';
 
     # ~
 
@@ -1055,13 +1055,18 @@ class Parsedown
     {
         $markup = '';
 
+        $text = (string) $text;
+        $markerList = (string) $this->inlineMarkerList;
+
         # $excerpt is based on the first occurrence of a marker
 
-        while ($excerpt = strpbrk((string) $text, (string) $this->inlineMarkerList))
+        while ($excerpt = strpbrk($text, $markerList))
         {
             $marker = $excerpt[0];
 
-            $markerPosition = strpos((string) $text, $marker);
+            # the marker is the first matching character, so its offset equals
+            # the length of the text strpbrk trimmed from the front
+            $markerPosition = strlen($text) - strlen($excerpt);
 
             $Excerpt = ['text' => $excerpt, 'context' => $text];
 
@@ -1103,7 +1108,7 @@ class Parsedown
                 }
 
                 # the text that comes before the inline
-                $unmarkedText = substr((string) $text, 0, $Inline['position']);
+                $unmarkedText = substr($text, 0, $Inline['position']);
 
                 # compile the unmarked text
                 $markup .= $this->unmarkedText($unmarkedText);
@@ -1112,18 +1117,18 @@ class Parsedown
                 $markup .= $Inline['markup'] ?? $this->element($Inline['element']);
 
                 # remove the examined text
-                $text = substr((string) $text, $Inline['position'] + $Inline['extent']);
+                $text = substr($text, $Inline['position'] + $Inline['extent']);
 
                 continue 2;
             }
 
             # the marker does not belong to an inline
 
-            $unmarkedText = substr((string) $text, 0, $markerPosition + 1);
+            $unmarkedText = substr($text, 0, $markerPosition + 1);
 
             $markup .= $this->unmarkedText($unmarkedText);
 
-            $text = substr((string) $text, $markerPosition + 1);
+            $text = substr($text, $markerPosition + 1);
         }
 
         $markup .= $this->unmarkedText($text);
