@@ -174,12 +174,7 @@ class Parsedown
                 }
             }
 
-            $indent = 0;
-
-            while (isset($line[$indent]) and $line[$indent] === ' ')
-            {
-                $indent ++;
-            }
+            $indent = strspn((string) $line, ' ');
 
             $text = $indent > 0 ? substr((string) $line, $indent) : $line;
 
@@ -1086,7 +1081,7 @@ class Parsedown
         $markup = '';
 
         $text = (string) $text;
-        $markerList = (string) $this->inlineMarkerList;
+        $markerList = $this->inlineMarkerList;
 
         # $excerpt is based on the first occurrence of a marker
 
@@ -1501,13 +1496,22 @@ class Parsedown
 
     protected function unmarkedText($text)
     {
+        $text = (string) $text;
+
+        // Both branches only act on newlines; a single-line fragment (the common
+        // case for inline text) can return immediately and skip the regex.
+        if (strpos($text, "\n") === false)
+        {
+            return $text;
+        }
+
         if ($this->breaksEnabled)
         {
-            $text = preg_replace('/[ ]*\n/', "<br />\n", (string) $text);
+            $text = preg_replace('/[ ]*\n/', "<br />\n", $text);
         }
         else
         {
-            $text = preg_replace('/(?:[ ][ ]+|[ ]*\\\\)\n/', "<br />\n", (string) $text);
+            $text = preg_replace('/(?:[ ][ ]+|[ ]*\\\\)\n/', "<br />\n", $text);
             $text = str_replace(" \n", "\n", $text);
         }
 
@@ -1559,14 +1563,12 @@ class Parsedown
         {
             $markup .= '>';
 
-            if (!isset($Element['nonNestables']))
-            {
-                $Element['nonNestables'] = [];
-            }
-
             if (isset($Element['handler']))
             {
-                $markup .= $this->{$Element['handler']}($text, $Element['nonNestables']);
+                // Read (don't write) nonNestables: assigning to $Element here
+                // would force a copy-on-write of the whole element array on
+                // every node. line() is the only handler that uses the 2nd arg.
+                $markup .= $this->{$Element['handler']}($text, $Element['nonNestables'] ?? []);
             }
             elseif (!$permitRawHtml)
             {
